@@ -5,13 +5,16 @@ use Barberry\Plugin;
 
 class Monitor implements Plugin\InterfaceMonitor
 {
-
     /**
      * @return array of error messages
      */
     public function reportUnmetDependencies()
     {
-        // TODO: Implement reportUnmetDependencies() method.
+        $errors = array();
+        if (!$this->ffmpegIsInstalled()) {
+            $errors[] = 'Please install ffmpeg';
+        }
+        return $errors;
     }
 
     /**
@@ -20,5 +23,13 @@ class Monitor implements Plugin\InterfaceMonitor
     public function reportMalfunction()
     {
         // TODO: Implement reportMalfunction() method.
+    }
+
+    /**
+     * @return bool whether ffmpeg is installed
+     */
+    protected function ffmpegIsInstalled()
+    {
+        return preg_match('/^\/\w+/', exec("which ffmpeg")) ? true : false;
     }
 }
