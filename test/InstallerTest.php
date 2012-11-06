@@ -16,7 +16,7 @@ class InstallerTest extends \PHPUnit_Framework_TestCase
             )->once();
         }
 
-        $installer = new Installer();
+        $installer = new Installer(__DIR__ . '/../tmp/');
         $installer->install($composer, $this->getMock('Barberry\\Monitor\\ComposerInterface'));
     }
 
@@ -28,7 +28,7 @@ class InstallerTest extends \PHPUnit_Framework_TestCase
             $this->anything()
         );
 
-        $installer = new Installer();
+        $installer = new Installer(__DIR__ . '/../tmp/');
         $installer->install($this->getMock('Barberry\\Direction\\ComposerInterface'), $composer);
     }
 }

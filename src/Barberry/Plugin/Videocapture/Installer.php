@@ -8,6 +8,13 @@ use Barberry\ContentType;
 
 class Installer implements Plugin\InterfaceInstaller
 {
+    private $tempDir;
+
+    public function __construct($dir)
+    {
+        $this->tempDir = $dir;
+    }
+
     public function install(Direction\ComposerInterface $directionComposer, Monitor\ComposerInterface $monitorComposer,
                             $pluginParams = array())
     {
@@ -16,14 +23,14 @@ class Installer implements Plugin\InterfaceInstaller
                 $pair[0],
                 eval('return ' . $pair[1] . ';'),
                 <<<PHP
-new Plugin\\Videocapture\\Converter ($pair[1]);
+new Plugin\\Videocapture\\Converter ($pair[1], '{$this->tempDir}');
 PHP
                 ,
                 'new Plugin\\Videocapture\\Command'
             );
         }
 
-        $monitorComposer->writeClassDeclaration('Videocapture', "parent::__construct()");
+        $monitorComposer->writeClassDeclaration('Videocapture', "parent::__construct('{$this->tempDir}'')");
     }
 
     /**
