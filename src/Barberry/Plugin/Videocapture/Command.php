@@ -5,16 +5,16 @@ use Barberry\Plugin;
 
 class Command implements Plugin\InterfaceCommand
 {
-    const MAX_SCREENSHOT_WIDTH = 1280;
-    const MAX_SCREENSHOT_HEIGHT = 720;
+    const MAX_WIDTH = 1280; // output resolution either video or image
+    const MAX_HEIGHT = 720;
     const MAX_AUDIO_BITRATE = 256;
     const MAX_VIDEO_BITRATE = 4000;
 
-    private $screenshotWidth;
-    private $screenshotHeight;
+    private $width;
+    private $height;
     private $audioBitrate;
     private $videoBitrate;
-    private $screenshotTimestamp;
+    private $screenshotTime;
     private $commandForImagemagick;
 
     /**
@@ -28,8 +28,8 @@ class Command implements Plugin\InterfaceCommand
 
         foreach ($params as $parameter) {
             if (preg_match('/^([\d]*)x([\d]*)$/', $parameter, $matches)) {
-                $this->screenshotWidth = strlen($matches[1]) ? (int)$matches[1] : null;
-                $this->screenshotHeight = strlen($matches[2]) ? (int)$matches[2] : null;
+                $this->width = strlen($matches[1]) ? (int)$matches[1] : null;
+                $this->height = strlen($matches[2]) ? (int)$matches[2] : null;
             }
             if (preg_match('/^a([\d]+)$/', $parameter, $matches)) {
                 $this->audioBitrate = strlen($matches[1]) ? (int)$matches[1] : null;
@@ -37,8 +37,8 @@ class Command implements Plugin\InterfaceCommand
             if (preg_match('/^v([\d]+)$/', $parameter, $matches)) {
                 $this->videoBitrate = strlen($matches[1]) ? (int)$matches[1] : null;;
             }
-            if (preg_match('/^[\d]{10}$/', $parameter, $matches)) {
-                $this->screenshotTimestamp = (int)$matches[0];
+            if (preg_match('/^([\d]+)$/', $parameter, $matches)) {
+                $this->screenshotTime = (int)$matches[1];
             }
         }
 
@@ -58,14 +58,14 @@ class Command implements Plugin\InterfaceCommand
         return strval($this) === $commandString;
     }
 
-    public function screenshotWidth()
+    public function width()
     {
-        return min($this->screenshotWidth, self::MAX_SCREENSHOT_WIDTH);
+        return min($this->width, self::MAX_WIDTH);
     }
 
-    public function screenshotHeight()
+    public function height()
     {
-        return min($this->screenshotHeight, self::MAX_SCREENSHOT_HEIGHT);
+        return min($this->height, self::MAX_HEIGHT);
     }
 
     public function audioBitrate()
@@ -78,9 +78,9 @@ class Command implements Plugin\InterfaceCommand
         return min($this->videoBitrate, self::MAX_VIDEO_BITRATE);
     }
 
-    public function screenshotTimestamp()
+    public function screenshotTime()
     {
-        return is_null($this->screenshotTimestamp) ? null : $this->screenshotTimestamp;
+        return is_null($this->screenshotTime) ? null : $this->screenshotTime;
     }
 
     public function commandForImagemagick()
@@ -92,8 +92,8 @@ class Command implements Plugin\InterfaceCommand
     {
         $params = array();
 
-        if ($this->screenshotWidth || $this->screenshotHeight) {
-            $params[] = $this->screenshotWidth . 'x' . $this->screenshotHeight;
+        if ($this->width || $this->height) {
+            $params[] = $this->width . 'x' . $this->height;
         }
         if ($this->audioBitrate) {
             $params[] = 'a' . $this->audioBitrate;
@@ -101,10 +101,9 @@ class Command implements Plugin\InterfaceCommand
         if ($this->videoBitrate) {
             $params[] = 'v' . $this->videoBitrate;
         }
-        if ($this->screenshotTimestamp) {
-            $params[] = $this->screenshotTimestamp;
+        if ($this->screenshotTime) {
+            $params[] = $this->screenshotTime;
         }
-
         return implode('_', $params) . (is_null($this->commandForImagemagick) ? '' : '~' . $this->commandForImagemagick);
     }
 }

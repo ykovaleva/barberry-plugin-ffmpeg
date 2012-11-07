@@ -5,11 +5,11 @@ class CommandTest extends \PHPUnit_Framework_TestCase
 {
     public function testThereAreNoParametersByDefault()
     {
-        $this->assertNull(self::command()->screenshotWidth());
-        $this->assertNull(self::command()->screenshotHeight());
+        $this->assertNull(self::command()->width());
+        $this->assertNull(self::command()->height());
         $this->assertNull(self::command()->audioBitrate());
         $this->assertNull(self::command()->videoBitrate());
-        $this->assertNull(self::command()->screenshotTimestamp());
+        $this->assertNull(self::command()->screenshotTime());
         $this->assertNull(self::command()->commandForImageMagick());
     }
 
@@ -23,31 +23,31 @@ class CommandTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(128, self::command('a128_v256~50x50')->audioBitrate());
     }
 
-    public function testExtractsScreenshotTimestamp()
+    public function testExtractsScreenshotTime()
     {
-        $this->assertEquals(1351844118, self::command('1351844118_v256~50x50')->screenshotTimestamp());
+        $this->assertEquals(135, self::command('135_v256~50x50')->screenshotTime());
     }
 
-    public function testExtractsScreenshotWidthParameter()
+    public function testExtractsWidthParameter()
     {
-        $this->assertEquals(250, self::command('250x_1351844118_v256~50x50')->screenshotWidth());
+        $this->assertEquals(250, self::command('250x_135_v256~50x50')->width());
     }
 
-    public function testExtractsScreenshotHeightParameter()
+    public function testExtractsHeightParameter()
     {
-        $this->assertEquals(150, self::command('x150_1351844118_v256~50x50')->screenshotHeight());
+        $this->assertEquals(150, self::command('x150_135_v256~50x50')->height());
     }
 
     public function testExtractsImageMagickCommand()
     {
-        $this->assertEquals('800x600', self::command('x150_1351844118_v256~800x600')->commandForImageMagick());
+        $this->assertEquals('800x600', self::command('x150_135_v256~800x600')->commandForImageMagick());
     }
 
     public function testTransformsParamToMaximumAvailableValues()
     {
         $command = self::command('9000x9000_a512_v4500');
-        $this->assertEquals(1280, $command->screenshotWidth());
-        $this->assertEquals(720, $command->screenshotHeight());
+        $this->assertEquals(1280, $command->width());
+        $this->assertEquals(720, $command->height());
         $this->assertEquals(256, $command->audioBitrate());
         $this->assertEquals(4000, $command->videoBitrate());
     }
@@ -70,7 +70,7 @@ class CommandTest extends \PHPUnit_Framework_TestCase
     public static function correctCommands()
     {
         return array(
-            array('500x500_a128_v256_1351843630~100x100'),
+            array('500x500_a128_v256_135~100x100'),
             array('200x_a128_v256'),
             array('~100x100'),
             array('a128_1351843630~100x200')
