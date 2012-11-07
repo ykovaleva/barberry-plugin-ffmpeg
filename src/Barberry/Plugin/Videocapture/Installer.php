@@ -34,19 +34,39 @@ PHP
     }
 
     /**
-     * @return array with available convertation directions.
-     * Be aware: formats wmv, mkv, mpg, qt, ogv, are not supported by ffmpeg.
-     */
+    * @return array with available convertation directions.
+    * Be aware: format qt is not supported by ffmpeg.
+    */
     public static function directions()
     {
-        return array(
-            array(ContentType::flv(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::webm(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::mpeg(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::avi(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::mp4(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::mov(), '\\Barberry\\ContentType::png()'),
-            array(ContentType::byExtention('3gp'), '\\Barberry\\ContentType::png()')
-        );
+        $supportedVideo = array('flv', 'webm', 'wmv', 'mpeg', 'avi', 'mkv', 'mov', 'mp4', 'mpg', 'ogv');
+        $supportedImage = array('png', 'jpeg');
+
+        $directions = array();
+        foreach ($supportedVideo as $source) {
+            foreach ($supportedImage as $destinationImage) {
+                $directions[] = array(
+                    call_user_func(array('\\Barberry\\ContentType', $source)), '\\Barberry\\ContentType::' . $destinationImage . '()'
+                );
+            }
+            foreach ($supportedVideo as $destinationVideo) {
+                $directions[] = array(
+                    call_user_func(array('\\Barberry\\ContentType', $source)), '\\Barberry\\ContentType::' . $destinationVideo . '()'
+                );
+            }
+        }
+
+        // directions for 3gp format
+        foreach ($supportedVideo as $video) {
+            $directions[] = array(ContentType::byExtention('3gp'), '\\Barberry\\ContentType::' . $video . '()');
+            $directions[] = array(
+                call_user_func(array('\\Barberry\\ContentType', $video)), '\\Barberry\\ContentType::byExtention("3gp")'
+            );
+        }
+        foreach ($supportedImage as $image) {
+            $directions[] = array(ContentType::byExtention('3gp'), '\\Barberry\\ContentType::' . $image . '()');
+        }
+
+        return $directions;
     }
 }
