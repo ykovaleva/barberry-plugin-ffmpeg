@@ -5,6 +5,7 @@ class CommandTest extends \PHPUnit_Framework_TestCase
 {
     public function testThereAreNoParametersByDefault()
     {
+        $this->assertNull(self::command()->imageSize());
         $this->assertNull(self::command()->audioCodec());
         $this->assertNull(self::command()->audioBitrate());
         $this->assertNull(self::command()->videoCodec());
@@ -14,9 +15,14 @@ class CommandTest extends \PHPUnit_Framework_TestCase
         $this->assertNull(self::command()->commandForImageMagick());
     }
 
+    public function testExtractsImageSizeParameter()
+    {
+        $this->assertEquals('100x100', self::command('100x100_ab128_vb256~50x50')->imageSize());
+    }
+
     public function testExtractsAudioBitrateParameter()
     {
-        $this->assertEquals(128, self::command('ab128_vb256~50x50')->audioBitrate());
+        $this->assertEquals(128, self::command('110x_ab128_vb256~50x50')->audioBitrate());
     }
 
     public function testExtractsAudioCodecParameter()
@@ -75,7 +81,7 @@ class CommandTest extends \PHPUnit_Framework_TestCase
     public static function correctCommands()
     {
         return array(
-            array('ab128_vb256_135~100x100'),
+            array('100x100_ab128_vb256_135~100x100'),
             array('ab128_ac:mp3_vb512_vc:h263_10'),
             array('~100x100'),
             array('ab128_135~100x200')

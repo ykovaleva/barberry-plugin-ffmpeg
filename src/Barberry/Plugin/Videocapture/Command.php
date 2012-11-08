@@ -23,10 +23,14 @@ use Barberry\Plugin;
 
 class Command implements Plugin\InterfaceCommand
 {
+    const MAX_WIDTH = 1280;
+    const MAX_HEIGHT = 720;
     const MAX_AUDIO_BITRATE = 256;
     const MAX_VIDEO_BITRATE = 4000;
     const MAX_ROTATION = 3;
 
+    private $width;
+    private $height;
     private $audioBitrate;
     private $audioCodec;
     private $videoBitrate;
@@ -45,6 +49,10 @@ class Command implements Plugin\InterfaceCommand
         $params = explode('_', $commands[0]);
 
         foreach ($params as $parameter) {
+            if (preg_match('/^([\d]+)x([\d]+)$/', $parameter, $matches)) {
+                $this->width = strlen($matches[1]) ? $matches[1] : null;
+                $this->height = strlen($matches[2]) ? $matches[2] : null;
+            }
             if (preg_match('/^ab([\d]+)$/', $parameter, $matches)) {
                 $this->audioBitrate = strlen($matches[1]) ? (int)$matches[1] : null;
             }
@@ -79,6 +87,16 @@ class Command implements Plugin\InterfaceCommand
     public function conforms($commandString)
     {
         return strval($this) === $commandString;
+    }
+
+    public function imageSize()
+    {
+        $width = min($this->width, self::MAX_WIDTH);
+        $height = min($this->height, self::MAX_HEIGHT);
+        if ($width && $height) {
+            return $width . 'x' . $height;
+        }
+        return null;
     }
 
     public function audioBitrate()
@@ -119,6 +137,10 @@ class Command implements Plugin\InterfaceCommand
     public function __toString()
     {
         $params = array();
+
+        if ($this->width && $this->height) {
+            $params[] = $this->width . 'x' . $this->height;
+        }
 
         if ($this->audioBitrate) {
             $params[] = 'ab' . $this->audioBitrate;
