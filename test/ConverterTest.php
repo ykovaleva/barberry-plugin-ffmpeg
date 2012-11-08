@@ -57,7 +57,8 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
 
     private static function converter($targetContentType)
     {
-        return new Converter($targetContentType, __DIR__ . '/../tmp/');
+        $converter = new Converter;
+        return $converter->configure($targetContentType, __DIR__ . '/../tmp/');
     }
 
     private static function command($commandString)

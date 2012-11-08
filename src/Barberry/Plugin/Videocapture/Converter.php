@@ -8,10 +8,11 @@ class Converter implements Plugin\InterfaceConverter
 {
     private $tempDir;
 
-    public function __construct(ContentType $targetContentType, $tempDir)
+    public function configure(ContentType $targetContentType, $tempDir)
     {
         $this->targetContentType = $targetContentType;
         $this->tempDir = $tempDir;
+        return $this;
     }
 
     public function convert($bin, Plugin\InterfaceCommand $command = null)
@@ -32,7 +33,7 @@ class Converter implements Plugin\InterfaceConverter
         if (is_file($destinationFile)) {
             if (filesize($destinationFile)) {
                 $bin = file_get_contents($destinationFile);
-                //unlink($destinationFile);
+                unlink($destinationFile);
             } else {
                 unlink($destinationFile);
                 throw new VideocaptureException('failed to convert to destination file');

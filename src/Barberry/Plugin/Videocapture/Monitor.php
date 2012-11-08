@@ -7,9 +7,10 @@ class Monitor implements Plugin\InterfaceMonitor
 {
     private $tempDir;
 
-    public function __construct($tempDir = '')
+    public function configure($tempDir)
     {
         $this->tempDir = $tempDir;
+        return $this;
     }
 
     /**
