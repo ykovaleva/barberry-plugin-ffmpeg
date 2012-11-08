@@ -22,26 +22,27 @@ class Converter implements Plugin\InterfaceConverter
         if ($this->targetContentType->isImage()) {
             $cmd = $this->getCommandStringForVideoToImageConversion($sourceFile, $destinationFile, $command);
         }
-
         if ($this->targetContentType->isVideo()) {
             $cmd = $this->getCommandStringForVideoToVideoConversion($sourceFile, $destinationFile, $command);
         }
 
         exec('nice -n 0 ' . $cmd);
-        if (filesize($destinationFile)) {
-            $bin = file_get_contents($destinationFile);
-        } else {
-            unlink($sourceFile);
-            unlink($destinationFile);
-            throw new VideocaptureException('failed to convert to destination file');
+        unlink($sourceFile);
+
+        if (is_file($destinationFile)) {
+            if (filesize($destinationFile)) {
+                $bin = file_get_contents($destinationFile);
+                //unlink($destinationFile);
+            } else {
+                unlink($destinationFile);
+                throw new VideocaptureException('failed to convert to destination file');
+            }
         }
 
-        if ($this->targetContentType->isImage() && !is_null($command->commandForImagemagick())) {
+        if ($command->commandForImagemagick()) {
             $bin = $this->resizeWithImagemagick($bin, $command->commandForImagemagick());
         }
 
-        unlink($sourceFile);
-        unlink($destinationFile);
         return $bin;
     }
 
@@ -56,18 +57,35 @@ class Converter implements Plugin\InterfaceConverter
     private function getCommandStringForVideoToImageConversion($source, $destination, $command)
     {
         $from = escapeshellarg($source);
-        $dimensions = $this->getOutputFileDimensions($command);
+        $imageSize = $this->getImageSize($command);
+        $rotation = $this->getRotation($command);
         $time = $this->getScreenshotTime($from, $command);
         $to = escapeshellarg($destination);
-        return "ffmpeg {$time} -vframes 1 -i {$from} {$dimensions} -f image2 {$to} 2>&1";
+        return "ffmpeg {$time} -vframes 1 -i {$from} {$rotation} -f image2 {$imageSize} {$to} 2>&1";
     }
 
-    private function getOutputFileDimensions($command)
+    private function getCommandStringForVideoToVideoConversion($source, $destination, $command)
     {
-        if ($command->width() && $command->height()) {
-            return '-s ' . escapeshellarg($command->width() . 'x' . $command->height());
+        $from = escapeshellarg($source);
+        $imageSize = $this->getImageSize($command);
+        $audioParams = $this->getAudioParams($command);
+        $videoParams = $this->getVideoParams($source, $command);
+        $rotation = $this->getRotation($command);
+        $to = escapeshellarg($destination);
+        return "ffmpeg -i {$from} {$imageSize} {$audioParams} {$videoParams} {$rotation} -sn -strict experimental {$to} 2>&1";
+    }
+
+    private function getImageSize($command)
+    {
+        if ($command->imageSize()) {
+            return '-s ' . escapeshellarg($command->imageSize());
         }
         return '';
+    }
+
+    private function getRotation($command)
+    {
+        return $command->rotation() ? '-vf transpose=' . escapeshellarg($command->rotation()) : '';
     }
 
     private function getScreenshotTime($from, $command)
@@ -85,37 +103,39 @@ class Converter implements Plugin\InterfaceConverter
         return '-ss ' . escapeshellarg($seconds);
     }
 
-    private function getCommandStringForVideoToVideoConversion($source, $destination, $command)
+    private function getAudioParams($command)
     {
-        $from = escapeshellarg($source);
-        $dimensions = $this->getOutputFileDimensions($command);
-        $audioBitrate = $this->getAudioBitrate($command);
-        $videoBitrate = $this->getVideoBitrate($source, $command);
-        $to = escapeshellarg($destination);
-        return "ffmpeg -i {$from} {$dimensions} {$videoBitrate} {$audioBitrate} -sn -strict experimental {$to} 2>&1";
-    }
+        $bitrate = '';
+        $codec = '-acodec copy';
 
-    private function getVideoBitrate($source, $command)
-    {
-        $bitrate = '-vcodec copy';
-        if ($command->videoBitrate()) {
-            $bitrate = '-b ' . escapeshellarg($command->videoBitrate() . 'k');
-        } else {
-             $out = shell_exec('ffmpeg -i ' . $source . ' 2>&1 | grep bitrate:');
-             if (preg_match('/^bitrate: (\d+)$/', $out, $matches)) {
-                $bitrate = '-b ' . escapeshellarg($matches[1] . 'k');
-            }
-        }
-        return $bitrate;
-    }
-
-    private function getAudioBitrate($command)
-    {
-        $bitrate = '-acodec copy';
         if ($command->audioBitrate()) {
             $bitrate = '-ab ' . escapeshellarg($command->audioBitrate() . 'k');
         }
-        return $bitrate;
+        if ($command->audioCodec()) {
+            $codec = '-acodec ' . escapeshellarg($command->audioCodec());
+        }
+
+        return $bitrate . ' ' . $codec;
+    }
+
+    private function getVideoParams($source, $command)
+    {
+        $bitrate = '';
+        $codec = '-vcodec copy';
+
+        if ($command->videoBitrate()) {
+            $bitrate = '-b ' . escapeshellarg($command->videoBitrate() . 'k');
+        } else {
+            $out = shell_exec('ffmpeg -i ' . $source . ' 2>&1 | grep bitrate:');
+            if (preg_match('/^bitrate: (\d+)$/', $out, $matches)) {
+                $bitrate = '-b ' . escapeshellarg($matches[1] . 'k');
+            }
+        }
+        if ($command->videoCodec()) {
+            $codec = '-vcodec ' . escapeshellarg($command->videoCodec());
+        }
+
+        return $bitrate . ' ' . $codec;
     }
 
     protected function resizeWithImagemagick($bin, $commandString)
