@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Plugin;
 
@@ -44,6 +44,6 @@ class Monitor implements Plugin\InterfaceMonitor
 
     private function reportDirectoryIsWritable($dir)
     {
-        return (is_writable($dir)) ? null : 'ERROR: Temporary directory is not writable (Videocapture plugin)';
+        return (is_writable($dir)) ? null : 'ERROR: Temporary directory is not writable (Ffmpeg plugin)';
     }
 }

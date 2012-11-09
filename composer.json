@@ -1,5 +1,5 @@
 {
-    "name": "barberry/plugin-videocapture",
+    "name": "barberry/plugin-ffmpeg",
     "type": "barberry-plugin",
     "require": {
         "barberry/plugin-installer": "*",
@@ -14,6 +14,6 @@
         }
     ],
     "autoload": {
-        "psr-0": {"Barberry\\Plugin\\Videocapture": "src/"}
+        "psr-0": {"Barberry\\Plugin\\Ffmpeg": "src/"}
     }
 }

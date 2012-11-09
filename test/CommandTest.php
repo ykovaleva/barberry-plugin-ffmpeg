@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 class CommandTest extends \PHPUnit_Framework_TestCase
 {

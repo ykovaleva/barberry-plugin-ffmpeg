@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Plugin;
 use Barberry\ContentType;
@@ -36,7 +36,7 @@ class Converter implements Plugin\InterfaceConverter
                 unlink($destinationFile);
             } else {
                 unlink($destinationFile);
-                throw new VideocaptureException('failed to convert to destination file');
+                throw new FfmpegException('failed to convert to destination file');
             }
         }
 
@@ -49,7 +49,7 @@ class Converter implements Plugin\InterfaceConverter
 
     private function createTempFile($content)
     {
-        $tempFile = tempnam($this->tempDir, 'videocapture_');
+        $tempFile = tempnam($this->tempDir, 'ffmpeg_');
         chmod($tempFile, 0664);
         file_put_contents($tempFile, $content, FILE_APPEND);
         return $tempFile;

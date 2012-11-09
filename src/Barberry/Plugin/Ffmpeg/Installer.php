@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Plugin;
 use Barberry\Monitor;
@@ -15,12 +15,12 @@ class Installer implements Plugin\InterfaceInstaller
             $directionComposer->writeClassDeclaration(
                 $pair[0],
                 $pair[1],
-                'new Plugin\\Videocapture\\Converter',
-                'new Plugin\\Videocapture\\Command'
+                'new Plugin\\Ffmpeg\\Converter',
+                'new Plugin\\Ffmpeg\\Command'
             );
         }
 
-        $monitorComposer->writeClassDeclaration('Videocapture');
+        $monitorComposer->writeClassDeclaration('Ffmpeg');
     }
 
     /**

@@ -17,7 +17,7 @@
  * Anything after '~' sign will be send to imagemagick barberry plugin as command string.
  */
 
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Plugin;
 

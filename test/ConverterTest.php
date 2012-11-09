@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\ContentType;
 
@@ -51,7 +51,7 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
 
     public function testThrowsExceptionIfFfmpegFailsToCreateDestinationFile()
     {
-        $this->setExpectedException('\\Barberry\\Plugin\\Videocapture\\VideocaptureException');
+        $this->setExpectedException('\\Barberry\\Plugin\\Ffmpeg\\FfmpegException');
         self::converter(ContentType::byExtention('3gp'))->convert(self::bin(), self::command('ab33_vb454'));
     }
 

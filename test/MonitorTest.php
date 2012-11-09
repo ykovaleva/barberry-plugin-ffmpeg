@@ -1,5 +1,5 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 class MonitorTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,7 +24,7 @@ class MonitorTest extends \PHPUnit_Framework_TestCase
     }
     public function testReportsIfFfimpegIsNotInstalled()
     {
-        $monitor = $this->getMock('Barberry\\Plugin\\Videocapture\\Monitor', array('ffmpegIsInstalled'));
+        $monitor = $this->getMock('Barberry\\Plugin\\Ffmpeg\\Monitor', array('ffmpegIsInstalled'));
         $monitor->expects($this->once())->method('ffmpegIsInstalled')->will($this->returnValue(false));
 
         $this->assertContains(
@@ -44,7 +44,7 @@ class MonitorTest extends \PHPUnit_Framework_TestCase
         $monitor = self::monitor($this->testDirNotWritable);
         $this->assertEquals(
             array(
-                'ERROR: Temporary directory is not writable (Videocapture plugin)'
+                'ERROR: Temporary directory is not writable (Ffmpeg plugin)'
             ),
             $monitor->reportMalfunction()
         );

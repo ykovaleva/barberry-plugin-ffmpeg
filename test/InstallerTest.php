@@ -1,12 +1,12 @@
 <?php
-namespace Barberry\Plugin\Videocapture;
+namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\ContentType;
 use Mockery as m;
 
 class InstallerTest extends \PHPUnit_Framework_TestCase
 {
-    public function testDelegatesCreationOfVideocaptureDirections()
+    public function testDelegatesCreationOfFfmpegDirections()
     {
         $composer = m::mock('Barberry\\Direction\\ComposerInterface');
 
@@ -19,14 +19,14 @@ class InstallerTest extends \PHPUnit_Framework_TestCase
             )->once();
         }
 
-        $installer = new Installer(__DIR__ . '/../tmp/');
+        $installer = new Installer;
         $installer->install($composer, $this->getMock('Barberry\\Monitor\\ComposerInterface'));
     }
 
     public function testDelegatesCreationOfVideocaptureMonitor()
     {
         $composer = $this->getMock('Barberry\\Monitor\\ComposerInterface');
-        $composer->expects($this->once())->method('writeClassDeclaration')->with('Videocapture');
+        $composer->expects($this->once())->method('writeClassDeclaration')->with('Ffmpeg');
 
         $installer = new Installer;
         $installer->install($this->getMock('Barberry\\Direction\\ComposerInterface'), $composer);
