@@ -6,13 +6,19 @@ use Barberry\ContentType;
 class ConverterTest extends \PHPUnit_Framework_TestCase
 {
     public function testConvertsWebmToMp4() {
-        $result = self::converter(ContentType::mp4())->convert(self::bin(), self::command('ab56_vc:mpeg4_r1'));
+        $result = self::converter(ContentType::mp4())->convert(self::bin(), self::command('640x480_ab56_vc:mpeg4_r1'));
         $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
     }
 
     public function testConvertsWebmToAvi() {
         $result = self::converter(ContentType::avi())->convert(self::bin(), self::command('ab56'));
         $this->assertEquals(ContentType::avi(), ContentType::byString($result));
+    }
+
+    public function testConvertsMp4ToMp4() {
+        $bin = file_get_contents(__DIR__ . '/data/mp4File');
+        $result = self::converter(ContentType::mp4())->convert($bin, self::command('ab56_vc:libx264'));
+        $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
     }
 
     public function testConverts3gpToAvi()
@@ -32,13 +38,19 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
     public function testConvertsAviToJpeg()
     {
         $bin = file_get_contents(__DIR__ . '/data/aviFile');
-        $result = self::converter(ContentType::jpeg())->convert($bin, self::command('r2_150'));
+        $result = self::converter(ContentType::jpeg())->convert($bin, self::command('r1_150'));
         $this->assertEquals(ContentType::jpeg(), ContentType::byString($result));
     }
 
     public function testConvertsWebmToPng()
     {
         $result = self::converter(ContentType::png())->convert(self::bin(), self::command('ab56_vb512'));
+        $this->assertEquals(ContentType::png(), ContentType::byString($result));
+    }
+
+    public function testConvertsMp4ToPng() {
+        $bin = file_get_contents(__DIR__ . '/data/mp4File');
+        $result = self::converter(ContentType::png())->convert($bin, self::command('ab56_vc:libx264'));
         $this->assertEquals(ContentType::png(), ContentType::byString($result));
     }
 

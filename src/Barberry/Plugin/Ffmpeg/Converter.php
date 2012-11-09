@@ -26,7 +26,7 @@ class Converter implements Plugin\InterfaceConverter
         if ($this->targetContentType->isVideo()) {
             $cmd = $this->getCommandStringForVideoToVideoConversion($sourceFile, $destinationFile, $command);
         }
-
+;
         exec('nice -n 0 ' . $cmd);
         unlink($sourceFile);
 
@@ -89,8 +89,8 @@ class Converter implements Plugin\InterfaceConverter
         if ($command->rotation()) {
             $rotation = '-vf transpose=' . escapeshellarg($command->rotation());
         } else {
-            $out = shell_exec('ffmpeg -i ' . $from . ' 2>&1 | grep rotation:');
-            if (preg_match('/^rotation: ([\d]+)$/', $out, $matches)) {
+            $out = shell_exec('ffmpeg -i ' . $from . ' 2>&1 | grep rotate');
+            if (preg_match('/^rotate:([\d]+)$/', str_replace(' ', '', $out), $matches)) {
                 $rotation = '-vf transpose=' . escapeshellarg($matches[1]/90);
             }
         }
