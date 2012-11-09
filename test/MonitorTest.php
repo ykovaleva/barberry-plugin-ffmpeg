@@ -22,6 +22,7 @@ class MonitorTest extends \PHPUnit_Framework_TestCase
         exec('rm -rf ' . $this->testDirWritable);
         exec('rm -rf ' . $this->testDirNotWritable);
     }
+
     public function testReportsIfFfimpegIsNotInstalled()
     {
         $monitor = $this->getMock('Barberry\\Plugin\\Ffmpeg\\Monitor', array('ffmpegIsInstalled'));
@@ -29,6 +30,17 @@ class MonitorTest extends \PHPUnit_Framework_TestCase
 
         $this->assertContains(
             'Please install ffmpeg',
+            $monitor->reportUnmetDependencies()
+        );
+    }
+
+    public function testReportsInsufficientVersionOfFfmpeg()
+    {
+        $monitor = $this->getMock('Barberry\\Plugin\\Ffmpeg\\Monitor', array('ffmpegVersion'));
+        $monitor->expects($this->any())->method('ffmpegVersion')->will($this->returnValue('0.4.0'));
+
+        $this->assertContains(
+            'Insufficient ffmpeg version: expected >= 0.10.5',
             $monitor->reportUnmetDependencies()
         );
     }
