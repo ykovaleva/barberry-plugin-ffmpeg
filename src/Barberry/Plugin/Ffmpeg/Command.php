@@ -37,7 +37,6 @@ class Command implements Plugin\InterfaceCommand
     private $videoCodec;
     private $rotation;
     private $screenshotTime;
-    private $commandForImagemagick;
 
     /**
      * @param string $commandString
@@ -49,7 +48,7 @@ class Command implements Plugin\InterfaceCommand
         $params = explode('_', $commands[0]);
 
         foreach ($params as $parameter) {
-            if (preg_match('/^([\d]+)x([\d]+)$/', $parameter, $matches)) {
+            if (preg_match('/^([\d]*)x([\d]*)$/', $parameter, $matches)) {
                 $this->width = strlen($matches[1]) ? $matches[1] : null;
                 $this->height = strlen($matches[2]) ? $matches[2] : null;
             }
@@ -72,9 +71,6 @@ class Command implements Plugin\InterfaceCommand
                 $this->screenshotTime = (int)$matches[1];
             }
         }
-
-        $this->commandForImagemagick = isset($commands[1]) ? $commands[1] : null;
-
         return $this;
     }
 
@@ -89,11 +85,11 @@ class Command implements Plugin\InterfaceCommand
         return strval($this) === $commandString;
     }
 
-    public function imageSize()
+    public function outputDimension()
     {
         $width = min($this->width, self::MAX_WIDTH);
         $height = min($this->height, self::MAX_HEIGHT);
-        if ($width && $height) {
+        if ($width || $height) {
             return $width . 'x' . $height;
         }
         return null;
@@ -129,16 +125,11 @@ class Command implements Plugin\InterfaceCommand
         return is_null($this->screenshotTime) ? null : $this->screenshotTime;
     }
 
-    public function commandForImagemagick()
-    {
-        return is_null($this->commandForImagemagick) ? null : $this->commandForImagemagick;
-    }
-
     public function __toString()
     {
         $params = array();
 
-        if ($this->width && $this->height) {
+        if ($this->width || $this->height) {
             $params[] = $this->width . 'x' . $this->height;
         }
 
@@ -160,6 +151,6 @@ class Command implements Plugin\InterfaceCommand
         if ($this->screenshotTime) {
             $params[] = $this->screenshotTime;
         }
-        return implode('_', $params) . (is_null($this->commandForImagemagick) ? '' : '~' . $this->commandForImagemagick);
+        return implode('_', $params);
     }
 }

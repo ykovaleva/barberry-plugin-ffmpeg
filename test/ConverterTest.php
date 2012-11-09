@@ -6,7 +6,7 @@ use Barberry\ContentType;
 class ConverterTest extends \PHPUnit_Framework_TestCase
 {
     public function testConvertsWebmToMp4() {
-        $result = self::converter(ContentType::mp4())->convert(self::bin(), self::command('ab56_vc:mpeg4_r3'));
+        $result = self::converter(ContentType::mp4())->convert(self::bin(), self::command('ab56_vc:mpeg4_r1'));
         $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
     }
 
@@ -32,7 +32,7 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
     public function testConvertsAviToJpeg()
     {
         $bin = file_get_contents(__DIR__ . '/data/aviFile');
-        $result = self::converter(ContentType::jpeg())->convert($bin, self::command('100x100_r2_150'));
+        $result = self::converter(ContentType::jpeg())->convert($bin, self::command('r2_150'));
         $this->assertEquals(ContentType::jpeg(), ContentType::byString($result));
     }
 
@@ -42,10 +42,10 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(ContentType::png(), ContentType::byString($result));
     }
 
-    public function testUtilizesExistingDirectionToExecuteImagemagickCommand()
+    public function testUtilizesExistingDirectionToExecuteImagemagickCommandForResizing()
     {
         require_once __DIR__ . '/FakePngToPngDirection.php';
-        self::converter(ContentType::png())->convert(self::bin(), self::command('ab56~50x50'));
+        self::converter(ContentType::png())->convert(self::bin(), self::command('50x50_ab56'));
         $this->assertTrue(\Barberry\Direction\PngToPngDirection::$hasBeenUtilized);
     }
 
