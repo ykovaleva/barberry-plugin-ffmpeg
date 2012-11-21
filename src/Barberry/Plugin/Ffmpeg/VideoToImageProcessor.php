@@ -2,6 +2,7 @@
 namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Direction;
+use Barberry\ContentType;
 
 class VideoToImageProcessor implements VideoProcessorInterface
 {
