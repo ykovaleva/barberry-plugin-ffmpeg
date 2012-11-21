@@ -2,33 +2,38 @@
 namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\ContentType;
-use Mockery as m;
+use Barberry\Direction;
+use Barberry\Direction\Composer as dComposer;
+use Barberry\Monitor\Composer as mComposer;
 
 class InstallerTest extends \PHPUnit_Framework_TestCase
 {
-    public function testDelegatesCreationOfFfmpegDirections()
+    private $directionsDir;
+    private $monitorsDir;
+
+    protected function setUp()
     {
-        $composer = m::mock('Barberry\\Direction\\ComposerInterface');
-
-        foreach(Installer::directions() as $direction) {
-            $composer->shouldReceive('writeClassDeclaration')->with(
-                equalTo($direction[0]),
-                equalTo($direction[1]),
-                anything(),
-                anything()
-            )->once();
-        }
-
-        $installer = new Installer;
-        $installer->install($composer, $this->getMock('Barberry\\Monitor\\ComposerInterface'));
+        $this->directionsDir = realpath(__DIR__ . '/../tmp') . '/test-directions/';
+        $this->monitorsDir = realpath(__DIR__ . '/../tmp') . '/test-monitors/';
+        @mkdir($this->directionsDir, 0777, true);
+        @mkdir($this->monitorsDir, 0777, true);
     }
 
-    public function testDelegatesCreationOfVideocaptureMonitor()
+    protected function tearDown()
     {
-        $composer = $this->getMock('Barberry\\Monitor\\ComposerInterface');
-        $composer->expects($this->once())->method('writeClassDeclaration')->with('Ffmpeg');
+        exec('rm -rf ' . $this->directionsDir);
+        exec('rm -rf ' . $this->monitorsDir);
+    }
 
+    public function testCreatesAviToMp4Direction()
+    {
         $installer = new Installer;
-        $installer->install($this->getMock('Barberry\\Direction\\ComposerInterface'), $composer);
+        $installer->install(new dComposer($this->directionsDir, '/tmp/'), new mComposer($this->monitorsDir, '/tmp/'));
+
+        include_once $this->directionsDir . 'OgvToMp4.php';
+        $direction = new Direction\OgvToMp4Direction('');
+        $result = $direction->convert(file_get_contents(__DIR__ . '/data/ogvFile'), Converter::DESTINATION_IS_VIDEO);
+
+        $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
     }
 }

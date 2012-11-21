@@ -5,71 +5,92 @@ use Barberry\ContentType;
 
 class ConverterTest extends \PHPUnit_Framework_TestCase
 {
-    public function testConvertsWebmToMp4() {
-        $result = self::converter(ContentType::mp4())->convert(self::bin(), self::command('640x480_ab56_vc:mpeg4_r1'));
-        $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
-    }
-
-    public function testConvertsWebmToAvi() {
-        $result = self::converter(ContentType::avi())->convert(self::bin(), self::command('ab56'));
-        $this->assertEquals(ContentType::avi(), ContentType::byString($result));
-    }
-
-    public function testConvertsMp4ToMp4() {
-        $bin = file_get_contents(__DIR__ . '/data/mp4File');
-        $result = self::converter(ContentType::mp4())->convert($bin, self::command('ab56_vc:libx264'));
-        $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
-    }
-
-    public function testConverts3gpToAvi()
+    public function testConvertsOgvToFlv()
     {
-        $bin = file_get_contents(__DIR__ . '/data/3gpFile');
-        $result = self::converter(ContentType::avi())->convert($bin, self::command('ab56_vb512'));
+        $result = self::converter(ContentType::flv(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command('r1'));
+        $this->assertEquals(ContentType::flv(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToWebm()
+    {
+        $result = self::converter(ContentType::webm(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command('100x100'));
+        $this->assertEquals(ContentType::webm(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToMpeg()
+    {
+        $result = self::converter(ContentType::mpeg(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command(''));
+        $this->assertEquals(ContentType::mpeg(), ContentType::byString($result));
+    }
+
+    public function testConvertsWebmToAvi()
+    {
+        $result = self::converter(ContentType::avi(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin(), self::command(''));
         $this->assertEquals(ContentType::avi(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToMkv()
+    {
+        $result = self::converter(ContentType::mkv(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command(''));
+        $this->assertEquals(ContentType::mkv(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToMov()
+    {
+        $result = self::converter(ContentType::mov(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command(''));
+        $this->assertEquals(ContentType::mov(), ContentType::byString($result));
+    }
+
+    public function testConvertsWebmToMp4()
+    {
+        $result = self::converter(ContentType::mp4(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin(), self::command('640x480_r1'));
+        $this->assertEquals(ContentType::mp4(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToMpg()
+    {
+        $result = self::converter(ContentType::mpg(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command(''));
+        $this->assertEquals(ContentType::mpg(), ContentType::byString($result));
+    }
+
+    public function testConvertsOgvToOgv()
+    {
+        $result = self::converter(ContentType::ogv(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('ogv'), self::command(''));
+        $this->assertEquals(ContentType::ogv(), ContentType::byString($result));
     }
 
     public function testConvertsAviTo3gp()
     {
-        $bin = file_get_contents(__DIR__ . '/data/aviFile');
-        $result = self::converter(ContentType::byExtention('3gp'))->convert($bin, self::command('176x144_ac:aac_vc:h263'));
+        $result = self::converter(ContentType::byExtention('3gp'), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin('avi'), self::command('176x144'));
         $this->assertEquals(ContentType::byExtention('3gp'), ContentType::byString($result));
     }
 
     public function testConvertsAviToJpeg()
     {
-        $bin = file_get_contents(__DIR__ . '/data/aviFile');
-        $result = self::converter(ContentType::jpeg())->convert($bin, self::command('r1_150'));
+        $result = self::converter(ContentType::jpeg(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_IMAGE)->convert(self::bin('avi'), self::command('r1_3'));
         $this->assertEquals(ContentType::jpeg(), ContentType::byString($result));
     }
 
     public function testConvertsWebmToPng()
     {
-        $result = self::converter(ContentType::png())->convert(self::bin(), self::command('ab56_vb512'));
+        $result = self::converter(ContentType::png(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_IMAGE)->convert(self::bin(), self::command(''));
         $this->assertEquals(ContentType::png(), ContentType::byString($result));
     }
 
     public function testConvertsMp4ToPng() {
-        $bin = file_get_contents(__DIR__ . '/data/mp4File');
-        $result = self::converter(ContentType::png())->convert($bin, self::command('ab56_vc:libx264'));
+        $result = self::converter(ContentType::png(), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_IMAGE)->convert(self::bin('mp4'), self::command('vc:libx264'));
         $this->assertEquals(ContentType::png(), ContentType::byString($result));
-    }
-
-    public function testUtilizesExistingDirectionToExecuteImagemagickCommandForResizing()
-    {
-        require_once __DIR__ . '/FakePngToPngDirection.php';
-        self::converter(ContentType::png())->convert(self::bin(), self::command('50x50_ab56'));
-        $this->assertTrue(\Barberry\Direction\PngToPngDirection::$hasBeenUtilized);
     }
 
     public function testThrowsExceptionIfFfmpegFailsToCreateDestinationFile()
     {
-        $this->setExpectedException('\\Barberry\\Plugin\\Ffmpeg\\FfmpegException');
-        self::converter(ContentType::byExtention('3gp'))->convert(self::bin(), self::command('ab33_vb454'));
+        $this->setExpectedException('\\Barberry\\Exception\\ConversionNotPossible');
+        self::converter(ContentType::byExtention('3gp'), \Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO)->convert(self::bin(), self::command('vc:454'));
     }
 
-    private static function converter($targetContentType)
+    private static function converter($targetContentType, $directionType)
     {
-        $converter = new Converter;
+        $converter = new Converter($directionType);
         return $converter->configure($targetContentType, __DIR__ . '/../tmp/');
     }
 
@@ -82,8 +103,8 @@ class ConverterTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    private static function bin()
+    private static function bin($extension = 'webm')
     {
-        return file_get_contents(__DIR__ . '/data/webmFile');
+        return file_get_contents(__DIR__ . "/data/{$extension}File");
     }
 }

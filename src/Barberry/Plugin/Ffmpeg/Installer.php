@@ -8,46 +8,63 @@ use Barberry\ContentType;
 
 class Installer implements Plugin\InterfaceInstaller
 {
-     public function install(Direction\ComposerInterface $directionComposer, Monitor\ComposerInterface $monitorComposer,
+    public function install(Direction\ComposerInterface $directionComposer, Monitor\ComposerInterface $monitorComposer,
                             $pluginParams = array())
     {
-        foreach ($this->directions() as $pair) {
-            $directionComposer->writeClassDeclaration(
-                $pair[0],
-                $pair[1],
-                'new Plugin\\Ffmpeg\\Converter',
-                'new Plugin\\Ffmpeg\\Command'
-            );
+        foreach (self::videoToVideoDirections() as $pair) {
+            $this->declareDirection($directionComposer, $pair, 'Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_VIDEO');
         }
-
+        foreach (self::videoToImageDirections() as $pair) {
+            $this->declareDirection($directionComposer, $pair, 'Barberry\Plugin\Ffmpeg\Converter::DESTINATION_IS_IMAGE');
+        }
         $monitorComposer->writeClassDeclaration('Ffmpeg');
     }
 
-    /**
-    * @return array with available convertation directions.
-    * Be aware: format qt is not supported by ffmpeg.
-    */
-    public static function directions()
+    private static function videoToVideoDirections()
     {
-        $supportedVideo = array('flv', 'webm', 'wmv', 'mpeg', 'avi', 'mkv', 'mov', 'mp4', 'mpg', 'ogv', '3gp');
-        $supportedImage = array('png', 'jpeg');
-
         $directions = array();
-        foreach ($supportedVideo as $source) {
-            foreach ($supportedImage as $destinationImage) {
+        foreach (self::supportedVideoFormats() as $source) {
+            foreach (self::supportedVideoFormats() as $destination) {
                 $directions[] = array(
                     \Barberry\ContentType::byExtention($source),
-                    \Barberry\ContentType::byExtention($destinationImage)
-                );
-            }
-            foreach ($supportedVideo as $destinationVideo) {
-                $directions[] = array(
-                    \Barberry\ContentType::byExtention($source),
-                    \Barberry\ContentType::byExtention($destinationVideo)
+                    \Barberry\ContentType::byExtention($destination)
                 );
             }
         }
-
         return $directions;
+    }
+
+    private static function videoToImageDirections()
+    {
+        $directions = array();
+        foreach (self::supportedVideoFormats() as $source) {
+            foreach (self::supportedImageFormats() as $destination) {
+                $directions[] = array(
+                    \Barberry\ContentType::byExtention($source),
+                    \Barberry\ContentType::byExtention($destination)
+                );
+            }
+        }
+        return $directions;
+    }
+
+    private function declareDirection(Direction\ComposerInterface $directionComposer, $directions, $type)
+    {
+        $directionComposer->writeClassDeclaration(
+            $directions[0],
+            $directions[1],
+            "new Plugin\\Ffmpeg\\Converter({$type})",
+            'new Plugin\\Ffmpeg\\Command'
+        );
+    }
+
+    private static function supportedVideoFormats()
+    {
+        return array('flv', 'webm', 'wmv', 'mpeg', 'avi', 'mkv', 'mov', 'mp4', 'mpg', 'ogv', '3gp');
+    }
+
+    private static function supportedImageFormats()
+    {
+        return array('png', 'jpeg');
     }
 }

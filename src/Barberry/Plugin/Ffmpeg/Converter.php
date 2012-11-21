@@ -3,45 +3,49 @@ namespace Barberry\Plugin\Ffmpeg;
 
 use Barberry\Plugin;
 use Barberry\ContentType;
+use Barberry\Exception;
 
 class Converter implements Plugin\InterfaceConverter
 {
+    const DESTINATION_IS_VIDEO = 'video';
+    const DESTINATION_IS_IMAGE = 'image';
+
     private $tempDir;
+    private $destinationType;
+    private $targetContentType;
+    private $processor;
+
+    public function __construct($destinationType)
+    {
+        $this->destinationType = $destinationType;
+    }
 
     public function configure(ContentType $targetContentType, $tempDir)
     {
         $this->targetContentType = $targetContentType;
         $this->tempDir = $tempDir;
+        $this->processor = $this->selectProcessor();
+
         return $this;
     }
 
     public function convert($bin, Plugin\InterfaceCommand $command = null)
     {
         $sourceFile = $this->createTempFile($bin);
-        $destinationFile = $sourceFile . '.' . $this->targetContentType->standartExtention();
+        $destinationFile = $sourceFile . '.' . $this->targetContentType->standardExtension();
 
-        if ($this->targetContentType->isImage()) {
-            $cmd = $this->getCommandStringForVideoToImageConversion($sourceFile, $destinationFile, $command);
-        }
-        if ($this->targetContentType->isVideo()) {
-            $cmd = $this->getCommandStringForVideoToVideoConversion($sourceFile, $destinationFile, $command);
-        }
-;
-        exec('nice -n 0 ' . $cmd);
+        $this->processor->init($sourceFile, $destinationFile, $command);
+        $this->processor->process();
         unlink($sourceFile);
 
-        if (is_file($destinationFile)) {
-            if (filesize($destinationFile)) {
-                $bin = file_get_contents($destinationFile);
+        if (is_file($destinationFile) && filesize($destinationFile)) {
+            $bin = file_get_contents($destinationFile);
+            unlink($destinationFile);
+        } else {
+            if (is_file($destinationFile)) {
                 unlink($destinationFile);
-            } else {
-                unlink($destinationFile);
-                throw new FfmpegException('failed to convert to destination file');
             }
-        }
-
-        if ($command->outputDimension() && $this->targetContentType->isImage()) {
-            $bin = $this->resizeWithImagemagick($bin, $command->outputDimension());
+            throw new Exception\ConversionNotPossible('failed to convert to destination file');
         }
 
         return $bin;
@@ -55,103 +59,12 @@ class Converter implements Plugin\InterfaceConverter
         return $tempFile;
     }
 
-    private function getCommandStringForVideoToImageConversion($source, $destination, $command)
+    private function selectProcessor()
     {
-        $from = escapeshellarg($source);
-        $rotation = $this->getRotation($source, $command);
-        $time = $this->getScreenshotTime($from, $command);
-        $to = escapeshellarg($destination);
-        return "ffmpeg {$time} -vframes 1 -i {$from} {$rotation} -f image2 {$to} 2>&1";
-    }
-
-    private function getCommandStringForVideoToVideoConversion($source, $destination, $command)
-    {
-        $from = escapeshellarg($source);
-        $outputDimension = $this->getOutputDimension($command);
-        $audioParams = $this->getAudioParams($command);
-        $videoParams = $this->getVideoParams($source, $command);
-        $rotation = $this->getRotation($source, $command);
-        $to = escapeshellarg($destination);
-        return "ffmpeg -i {$from} {$outputDimension} {$audioParams} {$videoParams} {$rotation} -sn -strict experimental {$to} 2>&1";
-    }
-
-    private function getOutputDimension($command)
-    {
-        if ($command->outputDimension()) {
-            return '-s ' . escapeshellarg($command->outputDimension());
-        }
-        return '';
-    }
-
-    private function getRotation($from, $command)
-    {
-        $rotation = '';
-        if ($command->rotation()) {
-            $rotation = '-vf transpose=' . escapeshellarg($command->rotation());
+        if ($this->destinationType === self::DESTINATION_IS_IMAGE) {
+            return new VideoToImageProcessor($this->targetContentType);
         } else {
-            $out = shell_exec('ffmpeg -i ' . $from . ' 2>&1 | grep rotate');
-            if (preg_match('/^rotate:([\d]+)$/', str_replace(' ', '', $out), $matches)) {
-                $rotation = '-vf transpose=' . escapeshellarg($matches[1]/90);
-            }
+            return new VideoToVideoProcessor($this->targetContentType);
         }
-        return $rotation;
-    }
-
-    private function getScreenshotTime($from, $command)
-    {
-        $seconds = 1;
-        if ($command->screenshotTime()) {
-            $seconds = $command->screenshotTime();
-        } else {
-            // get random time
-            $out = shell_exec('ffmpeg -i ' . $from . ' 2>&1 | grep Duration');
-            if (preg_match('/Duration: (\d+):(\d+):(\d+)/', $out, $time)) {
-                $videoLength = ($time[1]*3600) + ($time[2]*60) + $time[3];
-                $seconds = rand(1, $videoLength);
-            }
-        }
-        return '-ss ' . escapeshellarg($seconds);
-    }
-
-    private function getAudioParams($command)
-    {
-        $bitrate = '';
-        $codec = '-acodec copy';
-
-        if ($command->audioBitrate()) {
-            $bitrate = '-ab ' . escapeshellarg($command->audioBitrate() . 'k');
-        }
-        if ($command->audioCodec()) {
-            $codec = '-acodec ' . escapeshellarg($command->audioCodec());
-        }
-        return $bitrate . ' ' . $codec;
-    }
-
-    private function getVideoParams($source, $command)
-    {
-        $bitrate = '';
-        $codec = '-vcodec copy';
-
-        if ($command->videoBitrate()) {
-            $bitrate = '-b ' . escapeshellarg($command->videoBitrate() . 'k');
-        } else {
-            $out = shell_exec('ffmpeg -i ' . $source . ' 2>&1 | grep bitrate:');
-            if (preg_match('/^bitrate: (\d+)$/', $out, $matches)) {
-                $bitrate = '-b ' . escapeshellarg($matches[1] . 'k');
-            }
-        }
-        if ($command->videoCodec()) {
-            $codec = '-vcodec ' . escapeshellarg($command->videoCodec());
-        }
-        return $bitrate . ' ' . $codec;
-    }
-
-    protected function resizeWithImagemagick($bin, $commandString)
-    {
-        $from = ucfirst(ContentType::byString($bin)->standartExtention());
-        $to = ucfirst($this->targetContentType->standartExtention());
-        $directionClass = '\\Barberry\\Direction\\' . $from . 'To' . $to . 'Direction';
-        $direction = new $directionClass($commandString);
-        return $direction->convert($bin);
     }
 }

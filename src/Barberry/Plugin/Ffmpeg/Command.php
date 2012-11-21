@@ -25,15 +25,11 @@ class Command implements Plugin\InterfaceCommand
 {
     const MAX_WIDTH = 1280;
     const MAX_HEIGHT = 720;
-    const MAX_AUDIO_BITRATE = 256;
-    const MAX_VIDEO_BITRATE = 4000;
     const MAX_ROTATION = 3;
 
     private $width;
     private $height;
-    private $audioBitrate;
     private $audioCodec;
-    private $videoBitrate;
     private $videoCodec;
     private $rotation;
     private $screenshotTime;
@@ -49,17 +45,11 @@ class Command implements Plugin\InterfaceCommand
 
         foreach ($params as $parameter) {
             if (preg_match('/^([\d]*)x([\d]*)$/', $parameter, $matches)) {
-                $this->width = strlen($matches[1]) ? $matches[1] : null;
-                $this->height = strlen($matches[2]) ? $matches[2] : null;
-            }
-            if (preg_match('/^ab([\d]+)$/', $parameter, $matches)) {
-                $this->audioBitrate = strlen($matches[1]) ? (int)$matches[1] : null;
+                $this->width = strlen($matches[1]) ? (int)$matches[1] : null;
+                $this->height = strlen($matches[2]) ? (int)$matches[2] : null;
             }
             if (preg_match('/^ac:([\w]+)$/', $parameter, $matches)) {
                 $this->audioCodec = strlen($matches[1]) ? $matches[1] : null;;
-            }
-            if (preg_match('/^vb([\d]+)$/', $parameter, $matches)) {
-                $this->videoBitrate = strlen($matches[1]) ? (int)$matches[1] : null;;
             }
             if (preg_match('/^vc:([\w]+)$/', $parameter, $matches)) {
                 $this->videoCodec = strlen($matches[1]) ? $matches[1] : null;;
@@ -95,19 +85,9 @@ class Command implements Plugin\InterfaceCommand
         return null;
     }
 
-    public function audioBitrate()
-    {
-        return min($this->audioBitrate, self::MAX_AUDIO_BITRATE);
-    }
-
     public function audioCodec()
     {
         return is_null($this->audioCodec) ? null : $this->audioCodec;
-    }
-
-    public function videoBitrate()
-    {
-        return min($this->videoBitrate, self::MAX_VIDEO_BITRATE);
     }
 
     public function videoCodec()
@@ -133,14 +113,8 @@ class Command implements Plugin\InterfaceCommand
             $params[] = $this->width . 'x' . $this->height;
         }
 
-        if ($this->audioBitrate) {
-            $params[] = 'ab' . $this->audioBitrate;
-        }
         if ($this->audioCodec) {
             $params[] = 'ac:' . $this->audioCodec;
-        }
-        if ($this->videoBitrate) {
-            $params[] = 'vb' . $this->videoBitrate;
         }
         if ($this->videoCodec) {
             $params[] = 'vc:' . $this->videoCodec;
