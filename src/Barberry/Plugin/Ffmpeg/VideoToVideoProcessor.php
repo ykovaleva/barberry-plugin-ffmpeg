@@ -33,7 +33,7 @@ class VideoToVideoProcessor implements VideoProcessorInterface
         $rotationIndex = ($this->command->rotation() ? '-vf transpose=' : ($ffmpeg->rotationIndex() ? '-vf transpose=' . $ffmpeg->rotationIndex() : null));
         $to = escapeshellarg($this->destination);
 
-        $cmd = "ffmpeg -sameq -i {$from} {$outputDimension} {$audioCodec} {$videoCodec} {$rotationIndex} -sn -strict experimental {$to} 2>&1";
+        $cmd = "ffmpeg -i {$from} {$outputDimension} {$audioCodec} {$videoCodec} {$rotationIndex} -sn -strict experimental {$to} 2>&1";
 
         return exec('nice -n 0 ' . $cmd);
     }
