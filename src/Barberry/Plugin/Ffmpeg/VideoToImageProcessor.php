@@ -10,6 +10,7 @@ class VideoToImageProcessor implements VideoProcessorInterface
     private $destination;
     private $command;
     private $targetContentType;
+    private $defaultParams;
 
     public function __construct(\Barberry\ContentType $targetContentType)
     {
@@ -21,24 +22,39 @@ class VideoToImageProcessor implements VideoProcessorInterface
         $this->source = $source;
         $this->destination = $destination;
         $this->command = $command;
+        $this->defaultParams = new FfmpegDefaultParams($this->source, $this->targetContentType);
     }
 
     public function process()
     {
-        $ffmpeg = new FfmpegDefaultParams($this->source, $this->targetContentType);
-
         $from = escapeshellarg($this->source);
-        $screenshotTime = $this->command->screenshotTime() ?: $ffmpeg->screenshotTime();
-        $rotationIndex = ($this->command->rotation() ? '-vf transpose=' . $this->command->rotation() : ($ffmpeg->rotationIndex() ? '-vf transpose=' . $ffmpeg->rotationIndex() : null));
         $to = escapeshellarg($this->destination);
 
-        $cmd = "ffmpeg -ss {$screenshotTime} -vframes 1 -i {$from} {$rotationIndex} -f image2 {$to} 2>&1";
-
+        $cmd = "ffmpeg {$this->screenshotTime()} -vframes 1 -i {$from} {$this->rotationIndex()} -f image2 {$to} 2>&1";
         exec('nice -n 0 ' . $cmd);
 
         if ($this->command->outputDimension()) {
             $this->resizeWithImageMagick($this->command->outputDimension());
         }
+    }
+
+    private function screenshotTime()
+    {
+        if ($this->command->screenshotTime()) {
+            return '-ss ' . $this->command->screenshotTime();
+        } else {
+            return '-ss ' . $this->defaultParams->screenshotTime();
+        }
+    }
+
+    private function rotationIndex()
+    {
+        if ($this->command->rotation()) {
+            return '-vf transpose=' . $this->command->rotation();
+        } else if ($this->defaultParams->rotationIndex()) {
+            return '-vf transpose=' . $this->defaultParams->rotationIndex();
+        }
+        return null;
     }
 
     private function resizeWithImagemagick($dimension)

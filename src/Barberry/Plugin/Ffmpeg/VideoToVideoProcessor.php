@@ -9,6 +9,7 @@ class VideoToVideoProcessor implements VideoProcessorInterface
     private $destination;
     private $command;
     private $targetContentType;
+    private $defaultParams;
 
     public function __construct(\Barberry\ContentType $targetContentType)
     {
@@ -20,20 +21,16 @@ class VideoToVideoProcessor implements VideoProcessorInterface
         $this->source = $source;
         $this->destination = $destination;
         $this->command = $command;
+        $this->defaultParams = new FfmpegDefaultParams($this->source, $this->targetContentType);
     }
 
     public function process()
     {
-        $ffmpeg = new FfmpegDefaultParams($this->source, $this->targetContentType);
-
         $from = escapeshellarg($this->source);
-        $outputDimension = $this->outputDimension() ? '-s ' . $this->outputDimension() : null;
-        $audioCodec = '-acodec ' . ($this->command->audioCodec() ?: $ffmpeg->audioCodec());
-        $videoCodec = '-vcodec ' . ($this->command->videoCodec() ?: $ffmpeg->videoCodec());
-        $rotationIndex = ($this->command->rotation() ? '-vf transpose=' : ($ffmpeg->rotationIndex() ? '-vf transpose=' . $ffmpeg->rotationIndex() : null));
         $to = escapeshellarg($this->destination);
 
-        $cmd = "ffmpeg -i {$from} {$outputDimension} {$audioCodec} {$videoCodec} {$rotationIndex} -sn -strict experimental {$to} 2>&1";
+        $convert = "ffmpeg -y -i {$from} {$this->outputDimension()} {$this->audioCodec()} {$this->videoCodec()} {$this->rotationIndex()} -sn -strict experimental {$to} 2>&1";
+        $cmd = "ffmpeg -i {$from} -vcodec copy -acodec copy {$this->rotationIndex()} {$to} >/dev/null 2>&1 || {$convert}";
 
         return exec('nice -n 0 ' . $cmd);
     }
@@ -42,10 +39,38 @@ class VideoToVideoProcessor implements VideoProcessorInterface
     {
         if ($this->command->outputDimension()) {
             if (preg_match('/^([\d]+)x([\d]+)$/', $this->command->outputDimension())) {
-                return $this->command->outputDimension();
+                return '-s ' . $this->command->outputDimension();
             } else {
                 throw new Exception\ConversionNotPossible('dimesions for video conversion is incorrect');
             }
+        }
+        return null;
+    }
+
+    private function audioCodec()
+    {
+        if ($this->command->audioCodec()) {
+             return '-acodec ' . $this->command->audioCodec();
+        } else {
+            return '-acodec ' . $this->defaultParams->audioCodec();
+        }
+    }
+
+    private function videoCodec()
+    {
+        if ($this->command->videoCodec()) {
+            return '-vcodec ' . $this->command->videoCodec();
+        } else {
+            return '-vcodec ' . $this->defaultParams->videoCodec();
+        }
+    }
+
+    private function rotationIndex()
+    {
+        if ($this->command->rotation()) {
+            return '-vf transpose=' . $this->command->rotation();
+        } else if ($this->defaultParams->rotationIndex()) {
+            return '-vf transpose=' . $this->defaultParams->rotationIndex();
         }
         return null;
     }
