@@ -55,7 +55,7 @@ class Command implements Plugin\InterfaceCommand
                 $this->videoCodec = strlen($matches[1]) ? $matches[1] : null;;
             }
             if (preg_match('/^r([\d]+)$/', $parameter, $matches)) {
-                $this->rotation = strlen($matches[1]) ? (int)$matches[1] : null;;
+                $this->rotation = (int)$matches[1] ?: null;
             }
             if (preg_match('/^([\d]+)$/', $parameter, $matches)) {
                 $this->screenshotTime = (int)$matches[1];
@@ -112,7 +112,6 @@ class Command implements Plugin\InterfaceCommand
         if ($this->width || $this->height) {
             $params[] = $this->width . 'x' . $this->height;
         }
-
         if ($this->audioCodec) {
             $params[] = 'ac:' . $this->audioCodec;
         }

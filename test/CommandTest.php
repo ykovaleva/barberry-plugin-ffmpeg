@@ -44,6 +44,12 @@ class CommandTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(3, $command->rotation());
     }
 
+    public function testOmitsRotationIfRotationIsSetToZero()
+    {
+        $command = self::command('r0');
+        $this->assertNull($command->rotation());
+    }
+
     public function testAmbiguityCommand()
     {
         $this->assertFalse(
