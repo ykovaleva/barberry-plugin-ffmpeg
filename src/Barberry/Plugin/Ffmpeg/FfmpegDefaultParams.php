@@ -20,8 +20,7 @@ class FfmpegDefaultParams
 
         $out = shell_exec('ffmpeg -i ' . $this->sourceFile . ' 2>&1 | grep -E "Duration|rotate"');
         if (preg_match('/Duration:(\d+):(\d+):(\d+)/', str_replace(' ', '', $out), $time)) {
-            $videoLength = ($time[1]*3600) + ($time[2]*60) + $time[3];
-            $data['duration'] = rand(1, $videoLength);
+            $data['duration'] = ($time[1]*3600) + ($time[2]*60) + $time[3];
         }
         if (preg_match('/rotate:([\d]+)$/', str_replace(' ', '', $out), $matches)) {
             $data['rotate'] = intval($matches[1]/90);
@@ -32,12 +31,12 @@ class FfmpegDefaultParams
 
     public function rotationIndex()
     {
-        return isset($this->metaData['rotate']) ?: null;
+        return isset($this->metaData['rotate']) ? $this->metaData['rotate'] : null;
     }
 
     public function screenshotTime()
     {
-        return isset($this->metaData['duration']) ?: 1;
+        return isset($this->metaData['duration']) ? rand(1, $this->metaData['duration']) : 1;
     }
 
     public function audioCodec()
