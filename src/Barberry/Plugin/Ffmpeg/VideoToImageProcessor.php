@@ -57,7 +57,7 @@ class VideoToImageProcessor implements VideoProcessorInterface
         return null;
     }
 
-    private function resizeWithImagemagick($dimension)
+    protected function resizeWithImagemagick($dimension)
     {
         $bin = file_get_contents($this->destination);
         $from = ucfirst(ContentType::byString($bin)->standardExtension());
