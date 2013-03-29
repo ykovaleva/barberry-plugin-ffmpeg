@@ -62,7 +62,7 @@ class VideoToImageProcessor implements VideoProcessorInterface
         $bin = file_get_contents($this->destination);
         $from = ucfirst(ContentType::byString($bin)->standardExtension());
         $to = ucfirst($this->targetContentType->standardExtension());
-        $directionClass = '\\Barberry\\Direction\\' . $from . 'To' . $to . 'Direction';
+        $directionClass = '\\Barberry\\Direction\\Direction' . $from . 'To' . $to;
         $direction = new $directionClass($dimension);
         file_put_contents($this->destination, $direction->convert($bin));
     }
