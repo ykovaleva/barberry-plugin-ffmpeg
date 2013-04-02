@@ -6,7 +6,6 @@
         "barberry/interfaces": "*",
         "barberry/plugin-imagemagick": "*"
     },
-    "minimum-stability": "dev",
     "authors": [
         {
             "name": "Yulia Kovaleva",
