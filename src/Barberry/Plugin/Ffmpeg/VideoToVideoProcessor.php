@@ -29,7 +29,7 @@ class VideoToVideoProcessor implements VideoProcessorInterface
         $from = escapeshellarg($this->source);
         $to = escapeshellarg($this->destination);
 
-        $cmd = "ffmpeg -y -i {$from} {$this->outputDimension()} {$this->audioCodec()} {$this->videoCodec()} {$this->rotationIndex()} -sn -strict experimental {$to} 2>&1";
+        $cmd = "ffmpeg -y -i {$from} {$this->outputDimension()} {$this->audioCodec()} {$this->videoCodec()} {$this->rotationIndex()} -sn -strict experimental -map_metadata -1 {$to} 2>&1";
         return exec('nice -n 0 ' . $cmd);
     }
 
